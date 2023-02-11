@@ -14,8 +14,11 @@
 * LICENSE: MIT <https://github.com/lifeline1337/mixtrack-restful/blob/main/LICENSE>
 */
 
+import compression from "compression";
 import express from "express";
 import initdb from "./db";
+
+import authController from "./controllers/auth.controller";
 
 const router = express();
 
@@ -29,6 +32,16 @@ router.all('/*', (req:express.Request, res:express.Response, next:express.NextFu
 const init = async () => {
 
   const redis = await initdb();
+
+  router.use(express.json({
+    limit: "100kb"
+  }));
+
+  router.use(compression({
+    level: 2
+  }));
+
+  router.use("/auth", authController());
 
 }
 
