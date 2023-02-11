@@ -33,10 +33,6 @@ const init = async () => {
 
   const redis = await initdb();
 
-  router.use(express.json({
-    limit: "100kb"
-  }));
-
   router.use(compression({
     level: 2
   }));

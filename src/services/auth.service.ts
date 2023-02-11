@@ -47,8 +47,8 @@ class AuthService {
       });
 
       const newRefreshToken = new refreshTokenModel({
-        access_token,
-        refresh_token,
+        access_token: access_token,
+        refresh_token: refresh_token,
         user: userid
       });
 

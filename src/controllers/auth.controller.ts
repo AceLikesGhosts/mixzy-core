@@ -16,20 +16,21 @@
 
 import express from "express";
 import { BadRequestError, ServerError } from "../error";
-import { loginValidator, registerValidator } from "../validators/auth.validator";
+import { loginValidator, refreshValidator, registerValidator } from "../validators/auth.validator";
 import authService from "../services/auth.service";
 import accountModel from "../models/account/account.model";
 import argon2 from "argon2";
 import { auth } from "../auth.middleware";
 import accessTokenModel from "../models/access_token/access_token.model";
 import refreshTokenModel from "../models/refresh_token/refresh_token.model";
+import { ParseJSON, ParseURLEncoded,  } from "../parsing.middleware";
 
 export default () => {
 
   const api = express.Router();
 
   // create account - POST "/_/auth/register"
-  api.post("/register", async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+  api.post("/register", ParseJSON, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
 
     const {error} = registerValidator.validate(req.body);
 
@@ -66,7 +67,7 @@ export default () => {
   });
 
   // login - POST "/_/auth/login"
-  api.post("/login", async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+  api.post("/login", ParseJSON, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
 
     const {error} = loginValidator.validate(req.body);
 
@@ -85,6 +86,37 @@ export default () => {
       res.status(200).json(tokens);
 
     } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
+  // refresh - PUT "/_/auth/refresh"
+  api.post("/refresh", ParseURLEncoded, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+    const {error} = refreshValidator.validate(req.body);
+
+    if (error) return next(new BadRequestError(error.details[0].message));
+
+    try {
+
+      const refreshTokenExists = await refreshTokenModel.findOne({refresh_token: req.body.refresh_token}).populate("user").exec();
+
+      if (!refreshTokenExists) return next(new BadRequestError("Invalid refresh token"));
+
+      await accessTokenModel.deleteOne({access_token: refreshTokenExists.access_token});
+
+      await refreshTokenModel.deleteOne({refresh_token: refreshTokenExists.refresh_token});
+
+      const tokens = await authService.genTokens(refreshTokenExists.user.id);
+
+      res.status(200).json(tokens);
+
+    } catch (err) {
+
+      console.log(err);
 
       next(new ServerError());
 
