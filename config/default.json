@@ -1,0 +1,7 @@
+{
+  "port": 3000,
+  "redis": null,
+  "mongo": null,
+  "access_secret": null,
+  "refresh_secret": null
+}
