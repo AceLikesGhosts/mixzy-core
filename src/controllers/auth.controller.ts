@@ -20,6 +20,9 @@ import { loginValidator, registerValidator } from "../validators/auth.validator"
 import authService from "../services/auth.service";
 import accountModel from "../models/account/account.model";
 import argon2 from "argon2";
+import { auth } from "../auth.middleware";
+import accessTokenModel from "../models/access_token/access_token.model";
+import refreshTokenModel from "../models/refresh_token/refresh_token.model";
 
 export default () => {
 
@@ -80,6 +83,25 @@ export default () => {
       const tokens = await authService.genTokens(account.id);
 
       res.status(200).json(tokens);
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
+  // logout - DELETE "/_/auth/logout"
+  api.delete("/logout", auth, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+    try {
+
+      await accessTokenModel.deleteOne({access_token: res.locals.token});
+
+      await refreshTokenModel.deleteOne({access_token: res.locals.token});
+
+      res.status(200).json({statusCode:200,message:"OK"});
 
     } catch (err) {
 
