@@ -51,6 +51,23 @@ export default () => {
 
   });
 
+  // fetch logged in user playlists - GET "/_/playlists"
+  api.get("/", ParseJSON, auth, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+    try {
+
+      const data = await playlistService.fetchPlaylists(res.locals.user.id);
+
+      res.status(200).json(data);
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
   return api;
 
 };
