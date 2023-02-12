@@ -16,10 +16,10 @@
 
 import express from "express";
 import { auth } from "../auth.middleware";
-import { BadRequestError, RateLimitError, ServerError } from "../error";
+import { BadRequestError, ForbiddenError, NotFoundError, RateLimitError, ServerError } from "../error";
 import playlistService from "../services/playlist.service";
 import { ParseJSON } from "../parsing.middleware";
-import { CreatePlaylistValidator } from "../validators/playlist.validator";
+import { CreatePlaylistValidator, DeletePlaylistValidator } from "../validators/playlist.validator";
 import _ from "lodash";
 
 export default () => {
@@ -59,6 +59,42 @@ export default () => {
       const data = await playlistService.fetchPlaylists(res.locals.user.id);
 
       res.status(200).json(data);
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
+  // delete playlist - DELETE "/_/playlists/:id"
+  api.delete("/:id", ParseJSON, auth, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+    
+    const {error} = DeletePlaylistValidator.validate(req.body);
+
+    if (error) return next(new BadRequestError(error.details[0].message));
+
+    try {
+
+      const d = await playlistService.deletePlaylist(res.locals.user, req.params.id, req.body.password);
+
+      if (d.error) {
+
+        switch (d.error) {
+          case "Playlist does not exist":
+            return next(new NotFoundError("Playlist not found"));
+          case "Access Denied":
+            return next(new ForbiddenError());
+        }
+
+      } else {
+
+        const data = await playlistService.fetchPlaylists(res.locals.user.id);
+
+        res.status(200).json(data);
+
+      }
 
     } catch (err) {
 

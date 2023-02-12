@@ -17,6 +17,8 @@
 import { IPlaylistSong } from "../models/playlist/playlist.type";
 import playlistModel from "../models/playlist/playlist.model";
 import _ from "lodash";
+import argon2 from "argon2";
+import IAccount from "../models/account/account.type";
 
 class PlaylistService {
 
@@ -39,6 +41,31 @@ class PlaylistService {
       const returnData = _.pick(savedPlaylist, ["id", "name", "songs", "isActive"]);
 
       return {playlist: returnData};
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+  // delete playlist method
+  async deletePlaylist (user: IAccount, playlistid: string, password: string): Promise<{error?:string, success?:boolean}> {
+    
+    try {
+
+      const playlist = await playlistModel.findOne({_id: playlistid}).populate("owner").exec();
+
+      if (!playlist) return {error: "Playlist does not exist"};
+
+      if (playlist.owner.id !== user.id) return {error: "Access Denied"};
+
+      if (await argon2.verify(user.hash, password) !== true) return {error: "Invalid password"};
+
+      await playlist.remove();
+
+      return {success: true};
 
     } catch (err) {
 

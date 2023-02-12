@@ -19,3 +19,7 @@ import joi from "joi";
 export const CreatePlaylistValidator = joi.object({
   name: joi.string().required().max(50)
 });
+
+export const DeletePlaylistValidator = joi.object({
+  password: joi.string().required()
+});

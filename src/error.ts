@@ -48,6 +48,16 @@ export class RateLimitError extends Error {
 
 }
 
+export class ForbiddenError extends Error {
+
+  code = 403;
+
+  error = "Forbidden";
+
+  message = "Access Denied.";
+
+}
+
 export interface ApiError extends Error {
   code: number,
   error: string,
