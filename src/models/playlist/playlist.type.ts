@@ -15,21 +15,20 @@
 */
 
 import mongoose from "mongoose";
-import IAccount from "./account.type";
+import IAccount from "../account/account.type";
 
-const Account = new mongoose.Schema({
-  email: {type: String, required: true, unique: true},
-  username: {type: String, required: true, unique: true},
-  hash: {type: String, required: true}
-});
+export interface IPlaylist extends mongoose.Document {
+  id: string,
+  name: string,
+  songs: IPlaylistSong[],
+  isActive: boolean,
+  owner: IAccount
+}
 
-Account.set("toJSON", {
-  versionKey: false,
-  transform(doc, ret, options) {
-    ret.id = ret._id;
-    delete ret._id;
-  },
-  virtuals: true
-})
-
-export default mongoose.model<IAccount>("accounts", Account);
+export interface IPlaylistSong {
+  _id: string,
+  title: string,
+  duration: number,
+  cid: string,
+  type: string
+}

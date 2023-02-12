@@ -40,6 +40,14 @@ export class BadRequestError extends Error {
 
 }
 
+export class RateLimitError extends Error {
+
+  code = 429;
+
+  error = "Too Many Requests";
+
+}
+
 export interface ApiError extends Error {
   code: number,
   error: string,

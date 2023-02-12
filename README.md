@@ -7,7 +7,7 @@ You'll need to install docker and docker compose to run the application as it ne
 
 You can install docker desktop [Here](https://www.docker.com/products/docker-desktop)
 
-Nodejs 18.13.0. install node [Here](https://nodejs.org/en/download/)
+Nodejs 18.14. install node [Here](https://nodejs.org/en/download/)
 
 Make sure you can build native packages.
 
