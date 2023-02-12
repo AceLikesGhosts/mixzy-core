@@ -14,22 +14,12 @@
 * LICENSE: MIT <https://github.com/lifeline1337/mixtrack-restful/blob/main/LICENSE>
 */
 
-import mongoose from "mongoose";
-import IAccount from "./account.type";
+import joi from "joi";
 
-const Account = new mongoose.Schema({
-  email: {type: String, required: true, unique: true},
-  username: {type: String, required: true, unique: true},
-  hash: {type: String, required: true}
+export const CreatePlaylistValidator = joi.object({
+  name: joi.string().required().max(50)
 });
 
-Account.set("toJSON", {
-  versionKey: false,
-  transform(doc, ret, options) {
-    ret.id = ret._id;
-    delete ret._id;
-  },
-  virtuals: true
-})
-
-export default mongoose.model<IAccount>("accounts", Account);
+export const DeletePlaylistValidator = joi.object({
+  password: joi.string().required()
+});

@@ -23,7 +23,7 @@ import argon2 from "argon2";
 import { auth } from "../auth.middleware";
 import accessTokenModel from "../models/access_token/access_token.model";
 import refreshTokenModel from "../models/refresh_token/refresh_token.model";
-import { ParseJSON, ParseURLEncoded,  } from "../parsing.middleware";
+import { ParseJSON, ParseURLEncoded } from "../parsing.middleware";
 
 export default () => {
 

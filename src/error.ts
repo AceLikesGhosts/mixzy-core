@@ -40,6 +40,24 @@ export class BadRequestError extends Error {
 
 }
 
+export class RateLimitError extends Error {
+
+  code = 429;
+
+  error = "Too Many Requests";
+
+}
+
+export class ForbiddenError extends Error {
+
+  code = 403;
+
+  error = "Forbidden";
+
+  message = "Access Denied.";
+
+}
+
 export interface ApiError extends Error {
   code: number,
   error: string,

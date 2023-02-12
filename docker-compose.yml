@@ -7,6 +7,7 @@ services:
       - 3000:3000
     links:
       - database
+      - cache
     env_file: '.env'
   database:
     container_name: 'mixtrack-database'
