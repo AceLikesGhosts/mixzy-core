@@ -23,3 +23,7 @@ export const CreatePlaylistValidator = joi.object({
 export const DeletePlaylistValidator = joi.object({
   password: joi.string().required()
 });
+
+export const PlaylistYTSearch = joi.object({
+  q: joi.string().required().min(2).max(500)
+});

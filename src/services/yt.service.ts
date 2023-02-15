@@ -1,0 +1,204 @@
+/*
+
+
+  __  __ _   _______             _    
+ |  \/  (_) |__   __|           | |   
+ | \  / |___  _| |_ __ __ _  ___| | __
+ | |\/| | \ \/ / | '__/ _` |/ __| |/ /
+ | |  | | |>  <| | | | (_| | (__|   < 
+ |_|  |_|_/_/\_\_|_|  \__,_|\___|_|\_\
+                                      
+* Author: Jordan (LIFELINE) <hello@lifeline1337.dev>
+* Copyright (C) 2023 LIFELINE
+* Repo: https://github.com/lifeline1337/mixtrack-restful
+* LICENSE: MIT <https://github.com/lifeline1337/mixtrack-restful/blob/main/LICENSE>
+*/
+
+import axios from "axios";
+import Duration from "durationts";
+import config from "config";
+import qs from "qs";
+import YTSearchRespData, { YTVideoQueryRespData } from "./yt.service.types";
+
+const defaultUrl = "https:/youtube.googleapis.com/youtube/v3";
+
+class YTService {
+
+  // query videos
+  async queryVideo (cids: string[] | string): Promise<{cid: string, title: string, thumbnail: string, duration: number, unavailable: boolean}[]> {
+
+    let cidsStr;
+
+    if (Array.isArray(cids)) {
+      cidsStr = cids.join(",");
+    }
+
+    let len = 0;
+
+    try {
+
+      let str = qs.stringify({
+        part: "contentDetails,snippet,status",
+        id: cidsStr,
+        fields: "items(id,contentDetails/duration,snippet(title,thumbnails/default),status/uploadStatus)",
+        key: config.get("yt")
+      });
+
+      const resp = await axios.get<YTVideoQueryRespData>(`${defaultUrl}/videos?${str}`);
+
+      let out: {cid: string, title: string, thumbnail: string, duration: number, unavailable: boolean}[] = [];
+
+      for (let i = 0; i < resp.data.items.length; i++) {
+
+        // This is a fix for YouTube using weeks in their durations instead of days...
+        if (resp.data.items[i].contentDetails.duration.indexOf("W") > -1) {
+
+          const weeksArr = resp.data.items[i].contentDetails.duration.match(/(\d+)W/);
+
+          if (weeksArr === null) throw new Error("Internal Error");
+
+          const weeks = parseInt(weeksArr[1]);
+
+          const days = resp.data.items[i].contentDetails.duration.match(/(\d+)D/);
+
+          if (days) {
+
+            resp.data.items[i].contentDetails.duration = resp.data.items[i].contentDetails.duration.replace(days[0], (parseInt(days[1]) + (weeks*7)).toString() + 'D');
+
+          } else {
+
+            resp.data.items[i].contentDetails.duration = resp.data.items[i].contentDetails.duration.replace('T', (weeks*7).toString() + 'DT')
+
+          }
+
+          resp.data.items[i].contentDetails.duration = resp.data.items[i].contentDetails.duration.replace(weeksArr[0], '');
+
+        }
+
+        let dur = new Duration(resp.data.items[i].contentDetails.duration).inSeconds();
+
+        if (resp.data.items[i].id) {
+
+          let d = {
+            cid: resp.data.items[i].id,
+            title: resp.data.items[i].snippet.title,
+            thumbnail: resp.data.items[i].snippet.thumbnails.default.url,
+            duration: dur,
+            unavailable: resp.data.items[i].status.uploadStatus != 'processed' && resp.data.items[i].status.uploadStatus != 'uploaded',
+          }
+
+          out.push(d);
+
+          len++;
+        }
+
+      }
+
+      return out;
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+  // get video
+  async getVideo (inCid: string[] | string): Promise<{cid: string, title: string, thumbnail: string, duration: number, unavailable: boolean}[]> {
+
+    let out: {cid: string, title: string, thumbnail: string, duration: number, unavailable: boolean}[] = [];
+
+    let requested = 0;
+
+    let inCids;
+
+    if (Array.isArray(inCid)) {
+
+      inCids = Array.from(Array(Math.ceil(inCid.length / 50)), (_, i) => {
+        return inCid.slice(i * 50, i * 50 + 50);
+      });
+
+      requested = inCids.length;
+
+      if (requested == 0) return out;
+
+      for (let i = 0; i < requested; i++) {
+        
+        try {
+          
+          let d = await this.queryVideo(inCid[i]);
+
+          Object.assign(out, d);
+
+        } catch (err) {
+
+          throw err;
+
+        }
+
+      }
+
+      return out;
+
+    } else {
+
+      if (typeof inCid !== "string") throw new Error("InvalidCid");
+
+      if (inCid.indexOf(",") > -1) {
+        throw new Error("StringContainsMultipleIDs");
+      }
+
+      const data = await this.queryVideo(inCid);
+
+      return data;
+
+    }
+
+  }
+
+  // search method
+  async search (query: string): Promise<{cid: string, title: string, thumbnail: string, duration: number, unavailable: boolean}[]> {
+
+    const inObj = {
+      part: "id",
+      maxResults: 50,
+      q: query,
+      type: "video",
+      videoEmbeddable: true,
+      fields: "items(id)",
+      key: config.get("yt"),
+      videoCategoryId: 10
+    }
+
+    const str = qs.stringify(inObj);
+
+    const url = `${defaultUrl}/search?${str}`;
+
+    try {
+
+      const d = await axios.get<YTSearchRespData>(url);
+
+      let ids = [];
+
+      for (let i = 0; i < d.data.items.length; i++) {
+
+        ids.push(d.data.items[i].id.videoId);
+
+      }
+
+      const out = await this.queryVideo(ids);
+
+      return out;
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+}
+
+export default new YTService();
