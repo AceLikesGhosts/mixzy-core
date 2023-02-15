@@ -211,7 +211,7 @@ export default () => {
 
     try {
 
-      const data = await playlistService.fetchPlaylistSongs(req.params.id, res.locals.user.id, parseInt(req.params.page));
+      const data: {error?: string, songs?: {_id?: string, type: string, cid: string, title: string, duration: number, thumbnail: string, unavailable: boolean}[]} = await playlistService.fetchPlaylistSongs(req.params.id, res.locals.user.id, parseInt(req.params.page));
 
       if (data.error) {
 
