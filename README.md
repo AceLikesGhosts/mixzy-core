@@ -1,4 +1,4 @@
-# mixtrack-restful
+# MixTrack Core
 MixTrack, A collaborative music listening platform
 
 ### Prerequisites

@@ -15,22 +15,16 @@
 */
 
 import mongoose from "mongoose";
-import IAccount from "../account/account.type";
 
-export interface IPlaylist extends mongoose.Document {
-  id: string,
-  name: string,
-  songs: IPlaylistSong[],
-  isActive: boolean,
-  owner: IAccount
+export default interface IYTSearchStore extends mongoose.Document {
+  query: string,
+  results: IYTSearchStoreResult[]
 }
 
-export interface IPlaylistSong {
-  _id?: string,
-  title: string,
-  duration: number,
+interface IYTSearchStoreResult {
   cid: string,
-  type: string,
+  duration: number,
+  title: string,
   thumbnail: string,
   unavailable: boolean
 }

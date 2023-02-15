@@ -2,5 +2,6 @@
   "mongo": "MONGO_URI",
   "redis": "REDIS_URI",
   "access_secret": "ACCESS_SECRET",
-  "refresh_secret": "REFRESH_SECRET"
+  "refresh_secret": "REFRESH_SECRET",
+  "yt": "YT_KEY"
 }

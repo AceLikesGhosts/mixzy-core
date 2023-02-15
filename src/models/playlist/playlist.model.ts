@@ -24,8 +24,10 @@ const PlaylistModel = new mongoose.Schema({
   songs: [{
     title: {type: String, required: true},
     cid: {type: String, required: true},
-    type: {type: String, defualt: "YT"},
-    duration: {type: Number, required: true}
+    type: {type: String, default: "YT"},
+    duration: {type: Number, required: true},
+    thumbnail: {type: String, required: true},
+    unavailable: {type: Boolean, required: true}
   }]
 });
 

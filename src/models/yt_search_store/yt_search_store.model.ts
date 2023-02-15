@@ -15,22 +15,17 @@
 */
 
 import mongoose from "mongoose";
-import IAccount from "../account/account.type";
+import IYTSearchStore from "./yt_search_store.type";
 
-export interface IPlaylist extends mongoose.Document {
-  id: string,
-  name: string,
-  songs: IPlaylistSong[],
-  isActive: boolean,
-  owner: IAccount
-}
+const YTSearchStore = new mongoose.Schema({
+  query: {type: String, required: true, unique: true},
+  results: [{
+    cid: {type: String, required: true},
+    title: {type: String, required: true},
+    thumbnail: {type: String, required: true},
+    duration: {type: Number, required: true},
+    unavailable: {type: Boolean, required: true}
+  }]
+});
 
-export interface IPlaylistSong {
-  _id?: string,
-  title: string,
-  duration: number,
-  cid: string,
-  type: string,
-  thumbnail: string,
-  unavailable: boolean
-}
+export default mongoose.model<IYTSearchStore>("yt_search_stores", YTSearchStore);
