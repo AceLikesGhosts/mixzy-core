@@ -4,5 +4,9 @@
   "mongo": null,
   "access_secret": null,
   "refresh_secret": null,
-  "yt": null
+  "yt": null,
+  "s3": {
+    "accessKey": null,
+    "accessSecret": null
+  }
 }

@@ -14,12 +14,14 @@
 * LICENSE: MIT <https://github.com/lifeline1337/mixtrack-restful/blob/main/LICENSE>
 */
 
-import mongoose from "mongoose";
+import joi from "joi";
 
-export default interface IAccount extends mongoose.Document {
-  email: string,
-  id: string,
-  username: string,
-  profile_image: string | null,
-  hash: string
-}
+export const changeUsername = joi.object({
+  username: joi.string().required().min(3).max(45).regex(new RegExp("^(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._ ]+(?<![_.])$")),
+  password: joi.string().required()
+});
+
+export const changePasswordValidator = joi.object({
+  current_password: joi.string().required().min(7).max(300),
+  new_password: joi.string().required().min(7).max(300)
+});

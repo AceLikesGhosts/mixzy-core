@@ -20,6 +20,7 @@ import initdb from "./db";
 
 import authController from "./controllers/auth.controller";
 import playlistsController from "./controllers/playlists.controller";
+import accountsController from "./controllers/accounts.controller";
 
 const router = express();
 
@@ -40,6 +41,7 @@ const init = async () => {
 
   router.use("/auth", authController());
   router.use("/playlists", playlistsController());
+  router.use("/accounts", accountsController(redis));
 
 }
 
