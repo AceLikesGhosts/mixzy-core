@@ -1,5 +1,5 @@
-# MixTrack Core
-MixTrack, A collaborative music listening platform
+# Musicpad Core
+Musicpad, A collaborative music listening platform
 
 ### Prerequisites
 
