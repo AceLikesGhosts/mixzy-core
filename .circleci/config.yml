@@ -1,18 +1,18 @@
 version: 2
-  jobs:
-    test:
+jobs:
+  test:
+    docker:
+      - image: circleci/node:18.16
+    steps:
+      - checkout
+      - run: echo "Running Lint"
+      - run: npm install
+      - run: npm run lint
+    build:
       docker:
         - image: circleci/node:18.16
       steps:
         - checkout
-        - run: echo "Running Lint"
-        - run: npm install
-        - run: npm run lint
-      build:
-        docker:
-          - image: circleci/node:18.16
-        steps:
-          - checkout
-          - run: echo "build project"
-          - npm install
-          - npm run build
+        - run: echo "build project"
+        - npm install
+        - npm run build
