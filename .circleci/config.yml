@@ -9,7 +9,6 @@ jobs:
         name: install npm packages
         command: |
           npm install
-        name:
       - run:
         name: Run Lint Tests
         command: |
