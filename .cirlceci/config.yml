@@ -1,0 +1,16 @@
+version: 2.1
+jobs:
+  run_tests:
+    docker:
+      - image: circleci/node:18.16.0
+    steps:
+      - checkout
+      - run:
+        name: install npm packages
+        command: |
+          npm install
+        name:
+      - run:
+        name: Run Lint Tests
+        command: |
+          npm run lint

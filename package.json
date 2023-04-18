@@ -4,7 +4,7 @@
   "description": "MixTrack, A collaborative music listening platform",
   "main": "dist",
   "scripts": {
-    "lint": "eslint",
+    "lint": "eslint src",
     "build": "tsc",
     "start": "node ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"

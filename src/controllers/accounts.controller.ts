@@ -1,23 +1,23 @@
 /*
+  __  __           _                      _ 
+ |  \/  |         (_)                    | |
+ | \  / |_   _ ___ _  ___ _ __   __ _  __| |
+ | |\/| | | | / __| |/ __| '_ \ / _` |/ _` |
+ | |  | | |_| \__ \ | (__| |_) | (_| | (_| |
+ |_|  |_|\__,_|___/_|\___| .__/ \__,_|\__,_|
+                         | |                
+                         |_|                
 
-
-  __  __ _   _______             _    
- |  \/  (_) |__   __|           | |   
- | \  / |___  _| |_ __ __ _  ___| | __
- | |\/| | \ \/ / | '__/ _` |/ __| |/ /
- | |  | | |>  <| | | | (_| | (__|   < 
- |_|  |_|_/_/\_\_|_|  \__,_|\___|_|\_\
-                                      
 * Author: Jordan (LIFELINE) <hello@lifeline1337.dev>
 * Copyright (C) 2023 LIFELINE
-* Repo: https://github.com/lifeline1337/mixtrack-restful
-* LICENSE: MIT <https://github.com/lifeline1337/mixtrack-restful/blob/main/LICENSE>
+* Repo: https://github.com/musicpadnet/musicpad-core
+* LICENSE: MIT <https://github.com/musicpadnet/musicpad-core/blob/main/LICENSE>
 */
 
 import express from "express";
 import { auth } from "../auth.middleware";
 import { BadRequestError, RateLimitError, ServerError } from "../error";
-import { changePasswordValidator, changeUsername } from "../validators/account.validator";
+import { changePasswordValidator, changeUsername, usernameLookupValidator } from "../validators/account.validator";
 import accountService from "../services/account.service";
 import { ParseJSON } from "../parsing.middleware";
 import { Redis } from "ioredis";
@@ -78,6 +78,27 @@ export default (redis: Redis) => {
       if (d.error) return next(new BadRequestError("Invalid password"));
 
       res.status(200).json(d.tokens);
+
+    } catch (err) {
+      next(new ServerError());
+    }
+
+  });
+
+  // check username - GET "/_/accounts/check/:username"
+  api.get("/check/:username", async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+    const {error} = usernameLookupValidator.validate(req.params);
+
+    if (error) return next(new BadRequestError(error.details[0].message));
+
+    try {
+
+      const usernameExists = await accountModel.findOne({username: req.params.username});
+
+      if (usernameExists) return next(new BadRequestError("username taken"));
+
+      res.status(200).json({statusCode:200,username:req.params.username});
 
     } catch (err) {
       next(new ServerError());
@@ -282,6 +303,23 @@ export default (redis: Redis) => {
       next(new ServerError());
 
     });
+
+  });
+
+  // Get current logged in user - GET "/_/accounts/@me"
+  api.get("/@me", auth, ParseJSON, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+    try {
+
+      const d = await accountService.fetchLoggedinAccount(res.locals.user.id);
+
+      res.status(200).json(d);
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
 
   });
 
