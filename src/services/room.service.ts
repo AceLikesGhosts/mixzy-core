@@ -80,13 +80,27 @@ class RoomService {
   }
 
   // paginate Rooms method
-  paginateRooms (array: any[], page_size: number, page_number: number): any[] {
+  paginateRooms (array: any[], page_size: number, page_number: number): {prev: number | null, next: number | null, totalPages: number, items: any[]} {
 
     if (page_number === 0) {
       page_number = 1;
     }
 
-    return array.slice((page_number - 1) * page_size, page_number * page_size);
+    const offset = page_size * (page_number - 1);
+
+    const totalPages = Math.ceil(array.length / page_size);
+
+    const paginated = array.slice((page_number - 1) * page_size, page_number * page_size);
+
+    const d = {
+      prev: page_number - 1 ? page_number - 1 : null,
+      next: (totalPages > page_number) ? page_number + 1 : null,
+      totalPages: totalPages,
+      items: paginated
+    }
+
+    return d;
+
   }
 
 }

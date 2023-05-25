@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   api:
-    container_name: 'mixtrack-restful-api'
+    container_name: 'musicpad-restful-api'
     build: .
     ports:
       - 3000:3000
@@ -10,12 +10,12 @@ services:
       - cache
     env_file: '.env'
   database:
-    container_name: 'mixtrack-database'
+    container_name: 'musicpad-database'
     image: mongo
     ports:
       - 27017:27017
   cache:
-    container_name: 'mixtrack-cache'
+    container_name: 'musicpad-cache'
     image: redis
     ports:
       - 6379:6379

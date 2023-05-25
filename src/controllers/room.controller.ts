@@ -77,15 +77,15 @@ export default (redis: Redis) => {
 
       let roomsToReturn = [];
 
-      for (let i = 0; i < paginatedRooms.length; i++) {
+      for (let i = 0; i < paginatedRooms.items.length; i++) {
        
-        let acRoom = _.pick(paginatedRooms[i], ["id", "name", "users", "current_dj", "slug"]);
+        let acRoom = _.pick(paginatedRooms.items[i], ["id", "name", "users", "current_dj", "slug"]);
 
         roomsToReturn.push(acRoom);
         
       }
 
-      res.status(200).json(roomsToReturn);
+      res.status(200).json({next: paginatedRooms.next, prev: paginatedRooms.prev, totalPages: paginatedRooms.totalPages, items: paginatedRooms.items});
 
     } catch (err) {
 

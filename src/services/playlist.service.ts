@@ -33,16 +33,34 @@ class PlaylistService {
 
       if (playlists[4]) return {error: "You can only have 5 playlists"};
 
-      const newPlaylist = new playlistModel({
-        name,
-        owner: userid
-      });
+      if (!playlists[0]) {
 
-      const savedPlaylist = await newPlaylist.save();
+        const newPlaylist = new playlistModel({
+          name,
+          owner: userid,
+          isActive: true
+        });
 
-      const returnData = _.pick(savedPlaylist, ["id", "name", "songs", "isActive"]);
+        const savedPlaylist = await newPlaylist.save();
 
-      return {playlist: returnData};
+        const returnData = _.pick(savedPlaylist, ["id", "name", "songs", "isActive"]);
+
+        return {playlist: returnData};
+
+      } else {
+
+        const newPlaylist = new playlistModel({
+          name,
+          owner: userid
+        });
+
+        const savedPlaylist = await newPlaylist.save();
+
+        const returnData = _.pick(savedPlaylist, ["id", "name", "songs", "isActive"]);
+
+        return {playlist: returnData};
+
+      }
 
     } catch (err) {
 
