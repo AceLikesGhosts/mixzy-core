@@ -146,15 +146,14 @@ export default () => {
   });
 
   // search youtube - GET "/_/playlists/search/yt"
-  api.get("/search/yt", ParseURLEncoded, auth, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+  api.get("/search/yt", ParseJSON, auth, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
 
-    const {error} = PlaylistYTSearch.validate(req.body);
-
-    if (error) return next(new BadRequestError(error.details[0].message));
+    if (!req.query.q) return next(new BadRequestError("Invalid Query"))
 
     try {
 
-      const d = await playlistService.YTSearch(req.body.q);
+      // @ts-ignore
+      const d = await playlistService.YTSearch(req.query.q);
 
       res.status(200).json(d);
 

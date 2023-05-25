@@ -94,7 +94,7 @@ export default () => {
   });
 
   // refresh - PUT "/_/auth/refresh"
-  api.post("/refresh", ParseURLEncoded, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+  api.post("/refresh", ParseJSON, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
 
     const {error} = refreshValidator.validate(req.body);
 
