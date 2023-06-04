@@ -96,7 +96,7 @@ class PlaylistService {
   }
 
   // fetch user playlists method
-  async fetchPlaylists (userid: string): Promise<{playlists: {name: string, isActive: boolean, id: string, songCount: number}[]}> {
+  async fetchPlaylists (userid: string): Promise<{playlists: {name: string, isActive: boolean, id: string, songCount: number, songs: any[]}[]}> {
 
     try {
 
@@ -112,7 +112,8 @@ class PlaylistService {
           name: playlists[i].name,
           id: playlists[i].id,
           isActive: playlists[i].isActive,
-          songCount: playlists[i].songs.length
+          songCount: playlists[i].songs.length,
+          songs: playlists[i].songs
         }
 
         returnPlaylists.push(playlist);
@@ -229,17 +230,28 @@ class PlaylistService {
   }
 
   // paginate Songs method
-  async paginateSongs (array: {_id?: string, cid: string, type: string, title: string, duration: number, thumbnail: string, unavailable: boolean}[], page_size: number, page_number: number): Promise<{_id?: string, cid: string, type: string, title: string, duration: number, thumbnail: string, unavailable: boolean}[]> {
+  async paginateSongs (array: {_id?: string, cid: string, type: string, title: string, duration: number, thumbnail: string, unavailable: boolean}[], page_size: number, page_number: number): Promise<{items: {_id?: string, cid: string, type: string, title: string, duration: number, thumbnail: string, unavailable: boolean}[], next: number | null, prev: number | null, totalPages: number}> {
 
     if (page_number === 0) {
       page_number = 1;
     }
 
-    return array.slice((page_number - 1) * page_size, page_number * page_size);
+    const offset = page_size * (page_number - 1);
+
+    const totalPages = Math.ceil(array.length / page_size);
+
+    const paginated = array.slice((page_number - 1) * page_size, page_number * page_size);
+
+    return {
+      items: paginated,
+      prev: page_number - 1 ? page_number - 1 : null,
+      next: (totalPages > page_number) ? page_number + 1 : null,
+      totalPages: totalPages,
+    }
   }
 
   // fetch playlist songs
-  async fetchPlaylistSongs (playlistid: string, userid: string, page: number): Promise<{error?: string, songs?: {_id?: string, type: string, cid: string, title: string, duration: number, thumbnail: string, unavailable: boolean}[]}> {
+  async fetchPlaylistSongs (playlistid: string, userid: string, page: number): Promise<{error?: string, songs?: any[]}> {
 
     try {
 
@@ -249,9 +261,7 @@ class PlaylistService {
 
       if (playlist.owner.id !== userid) return {error: "Forbidden"};
 
-      const paginatedSongs = await this.paginateSongs(playlist.songs, 20, page);
-
-      return {songs: paginatedSongs};
+      return {songs: playlist.songs};
 
     } catch (err) {
       throw err;
@@ -310,6 +320,60 @@ class PlaylistService {
       playlist.songs.splice(toIndex, 0, element);
 
       await playlistModel.updateOne({_id: playlistid}, {$set: {songs: playlist.songs}});
+
+      return {success: true};
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+  // activate a playlist for user
+  async activatePlaylist (playlistid: string, userid: string): Promise<{error?: string, success?: boolean}> {
+
+    try {
+
+      const playlist = await playlistModel.findOne({_id: playlistid}).populate("owner").exec();
+
+      if (!playlist) return {error: "Invalid playlist"};
+
+      if (playlist.owner.id !== userid) return {error: "Forbidden"};
+
+      if (playlist.isActive === true) return {error: "Already active"};
+
+      await playlistModel.updateMany({owner: userid}, {$set: {isActive: false}});
+
+      playlist.isActive = true;
+
+      await playlist.save();
+
+      return {"success": true};
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+  // rename a playlist
+  async renamePlaylist (name: string, playlistid: string, userid: string): Promise<{error?: string, success?: boolean}> {
+
+    try {
+
+      const playlist = await playlistModel.findOne({_id: playlistid}).populate("owner").exec();
+
+      if (!playlist) return {error: "Invalid playlist"};
+
+      if (playlist.owner.id !== userid) return {error: "Forbidden"};
+
+      playlist.name = name;
+
+      await playlist.save();
 
       return {success: true};
 

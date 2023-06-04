@@ -27,3 +27,7 @@ export const DeletePlaylistValidator = joi.object({
 export const PlaylistYTSearch = joi.object({
   q: joi.string().required().min(2).max(500)
 });
+
+export const RenamePlaylistValidator = joi.object({
+  name: joi.string().required().max(50)
+});

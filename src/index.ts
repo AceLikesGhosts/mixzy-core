@@ -26,8 +26,8 @@ const server = http.createServer(app);
 
 app.get("/_", (req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept");
-  res.header("Access-Control-Allow-Methods", "GET");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH");
 
   res.status(200).json({statusCode:200,message:"OK"});
 

@@ -28,7 +28,7 @@ const router = express();
 router.all('/*', (req:express.Request, res:express.Response, next:express.NextFunction) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, PATCH");
+  res.header("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, PATCH, OPTIONS");
   next();
 });
 

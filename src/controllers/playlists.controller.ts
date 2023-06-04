@@ -19,8 +19,9 @@ import { auth } from "../auth.middleware";
 import { BadRequestError, ForbiddenError, NotFoundError, RateLimitError, ServerError } from "../error";
 import playlistService from "../services/playlist.service";
 import { ParseJSON, ParseURLEncoded } from "../parsing.middleware";
-import { CreatePlaylistValidator, DeletePlaylistValidator, PlaylistYTSearch } from "../validators/playlist.validator";
+import { CreatePlaylistValidator, DeletePlaylistValidator, PlaylistYTSearch, RenamePlaylistValidator } from "../validators/playlist.validator";
 import _ from "lodash";
+import playlistModel from "../models/playlist/playlist.model";
 
 export default () => {
 
@@ -97,6 +98,8 @@ export default () => {
             return next(new NotFoundError("Playlist not found"));
           case "Access Denied":
             return next(new ForbiddenError());
+          case "Invalid password":
+            return next(new BadRequestError("Invalid password"))
         }
 
       } else {
@@ -191,7 +194,13 @@ export default () => {
 
       } else {
 
-        res.status(200).json({statusCode: 200, message: "OK"});
+        const playlist = await playlistModel.findOne({_id: req.params.id});
+
+        if (!playlist) return next(new BadRequestError("Invalid id"));
+
+        const index = playlist.songs.length - 1;
+
+        res.status(200).json({song: playlist.songs[index]});
 
       }
 
@@ -206,11 +215,11 @@ export default () => {
   });
 
   // fetch playlist songs - GET "/_/playlists/:id/songs/:page"
-  api.get("/:id/songs/:page", auth, async (req, res, next) => {
+  api.get("/:id/songs", auth, async (req, res, next) => {
 
     try {
 
-      const data: {error?: string, songs?: {_id?: string, type: string, cid: string, title: string, duration: number, thumbnail: string, unavailable: boolean}[]} = await playlistService.fetchPlaylistSongs(req.params.id, res.locals.user.id, parseInt(req.params.page));
+      const data: {error?: string, songs?: any[]} = await playlistService.fetchPlaylistSongs(req.params.id, res.locals.user.id, parseInt(req.params.page));
 
       if (data.error) {
 
@@ -223,7 +232,7 @@ export default () => {
 
       } else {
 
-        res.status(200).json(data.songs);
+        res.status(200).json(data);
 
       }
 
@@ -299,6 +308,74 @@ export default () => {
 
       throw err;
 
+    }
+
+  });
+
+  // activate playlist - PATCH "/_/playlists/activate/:id"
+  api.patch("/activate/:id", auth, async (req, res, next) => {
+
+    if (!req.params.id) return next(new BadRequestError("Invlaid playlist id"));
+
+    try {
+
+      const d = await playlistService.activatePlaylist(req.params.id, res.locals.user.id);
+
+      if (d.error) {
+
+        switch (d.error) {
+
+          case "Invalid playlist":
+            return next(new BadRequestError("Invalid playlist"));
+          case "Forbidden":
+            return next(new ForbiddenError());
+          case "Already active":
+            return next(new BadRequestError("Already active"));
+
+        }
+
+      }
+
+      res.status(200).json({"statusCode":200,"message":"OK"});
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+  
+  });
+
+  // rename playlist - PATCH "/_/playlists/:id/rename"
+  api.patch("/:id/rename", auth, ParseJSON, async (req, res, next) => {
+
+    const {error} = RenamePlaylistValidator.validate(req.body);
+
+    if (error) return next(new BadRequestError(error.details[0].message));
+
+    if (!req.params.id) return next(new BadRequestError("Invalid playlist"));
+
+    try {
+
+      const d = await playlistService.renamePlaylist(req.body.name, req.params.id, res.locals.user.id);
+
+      if (d.error) {
+
+        switch (d.error) {
+
+          case "Invalid playlist":
+            return next(new BadRequestError("Invalid playlist"));
+          case "Forbidden":
+            return next(new ForbiddenError());
+
+        }
+
+      }
+
+      res.status(200).json({statusCode:200,message:"OK"});
+
+    } catch (err) {
+      next(new ServerError());
     }
 
   });
