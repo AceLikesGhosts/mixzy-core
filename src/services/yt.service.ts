@@ -14,13 +14,13 @@
 * LICENSE: MIT <https://github.com/musicpadnet/musicpad-core/blob/main/LICENSE>
 */
 
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Duration from "durationts";
 import config from "config";
 import qs from "qs";
 import YTSearchRespData, { YTVideoQueryRespData } from "./yt.service.types";
 
-const defaultUrl = "https:/youtube.googleapis.com/youtube/v3";
+const defaultUrl = "https://youtube.googleapis.com/youtube/v3";
 
 class YTService {
 
@@ -97,6 +97,9 @@ class YTService {
       return out;
 
     } catch (err) {
+
+      // @ts-ignore
+      console.log(err.response);
 
       throw err;
 
@@ -195,6 +198,50 @@ class YTService {
 
       throw err;
 
+    }
+
+  }
+
+  // get playlist
+  async getPlaylist (data: {playlistid: string, nextPageToken?: string, prevPageToken?: string}): Promise<{nextPageToken?: string, prevPageToken?: string, videos: string[]}> {
+
+    const url = "https://www.googleapis.com/youtube/v3/playlistItems?" + qs.stringify({
+		  part: "contentDetails",
+		  maxResults: 50,
+		  playlistId: data.playlistid,
+		  pageToken: data.nextPageToken,
+		  fields: "nextPageToken,prevPageToken,items(contentDetails(videoId))",
+		  key: config.get("yt")
+	  });
+
+    try {
+
+      const response = await axios.get(url);
+
+      let videos: string[] = [];
+
+      response.data.items.forEach((item: any) => {
+
+        videos.push(item.contentDetails.videoId);
+
+      });
+
+      let out = {
+        videos,
+        nextPageToken: response.data.nextPageToken ? response.data.nextPageToken : null,
+        prevPageToken: response.data.prevPageToken ? response.data.prevPageToken : null
+      }
+
+      return out;
+
+    } catch (err: any) {
+
+      if (err.response.data.error) {
+        throw "playlist does not exist";
+      } else {
+        throw err;
+      }
+      
     }
 
   }

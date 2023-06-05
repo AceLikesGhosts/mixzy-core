@@ -14,7 +14,7 @@
 * LICENSE: MIT <https://github.com/musicpadnet/musicpad-core/blob/main/LICENSE>
 */
 
-import { IPlaylistSong } from "../models/playlist/playlist.type";
+import { IPlaylist, IPlaylistSong } from "../models/playlist/playlist.type";
 import playlistModel from "../models/playlist/playlist.model";
 import _ from "lodash";
 import argon2 from "argon2";
@@ -376,6 +376,76 @@ class PlaylistService {
       await playlist.save();
 
       return {success: true};
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+  async importPlaylist (playlistid: string, name: string, userid: string): Promise<{playlist: IPlaylist}> {
+
+    try {
+
+      const playlists = await playlistModel.find({owner: userid});
+
+      if (playlists[4]) {
+
+        throw "you can only have 5 playlists";
+
+      } else {
+
+        let videos = [];
+
+        const results = await ytService.getPlaylist({playlistid});
+
+        const vids = await ytService.queryVideo(results.videos);
+
+        videos.push(vids);
+
+        if (results.nextPageToken) {
+        
+          const results2 = await ytService.getPlaylist({playlistid, nextPageToken: results.nextPageToken});
+
+          const vids2 = await ytService.queryVideo(results2.videos);
+
+          videos.push(vids2);
+
+          if (results2.nextPageToken) {
+
+            const results3 = await ytService.getPlaylist({playlistid, nextPageToken: results2.nextPageToken});
+
+            const vids3 = await ytService.queryVideo(results3.videos);
+
+            videos.push(vids3);
+
+            if (results3.nextPageToken) {
+
+              const results4 = await ytService.getPlaylist({playlistid, nextPageToken: results3.nextPageToken});
+
+              const vids4 = await ytService.queryVideo(results4.videos);
+
+              videos.push(vids4);
+
+            }
+
+          }
+
+        }
+
+        const newPlaylist = await new playlistModel({
+          name,
+          owner: userid,
+          songs: _.flatten(videos)
+        });
+
+        const newpl = await newPlaylist.save();
+
+        return {playlist: newpl};
+
+      }
 
     } catch (err) {
 
