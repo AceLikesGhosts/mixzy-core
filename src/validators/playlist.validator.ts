@@ -31,3 +31,7 @@ export const PlaylistYTSearch = joi.object({
 export const RenamePlaylistValidator = joi.object({
   name: joi.string().required().max(50)
 });
+
+export const ImportPlaylistValidator = joi.object({
+  name: joi.string().required().max(50)
+});

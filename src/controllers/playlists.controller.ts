@@ -19,7 +19,7 @@ import { auth } from "../auth.middleware";
 import { BadRequestError, ForbiddenError, NotFoundError, RateLimitError, ServerError } from "../error";
 import playlistService from "../services/playlist.service";
 import { ParseJSON, ParseURLEncoded } from "../parsing.middleware";
-import { CreatePlaylistValidator, DeletePlaylistValidator, PlaylistYTSearch, RenamePlaylistValidator } from "../validators/playlist.validator";
+import { CreatePlaylistValidator, DeletePlaylistValidator, ImportPlaylistValidator, PlaylistYTSearch, RenamePlaylistValidator } from "../validators/playlist.validator";
 import _ from "lodash";
 import playlistModel from "../models/playlist/playlist.model";
 
@@ -376,6 +376,40 @@ export default () => {
 
     } catch (err) {
       next(new ServerError());
+    }
+
+  });
+
+  // import playlist - POST "/_/playlists/import/:id"
+  api.post("/import/:id", auth, ParseJSON, async (req, res, next) => {
+
+    const {error} = ImportPlaylistValidator.validate(req.body);
+
+    if (error) return next(new BadRequestError(error.details[0].message));
+
+    if (!req.params.id) return next(new BadRequestError("Invalid playlist"));
+
+    try {
+
+      const d = await playlistService.importPlaylist(req.params.id, req.body.name, res.locals.user.id);
+
+      res.status(200).json(d.playlist);
+
+    } catch (err) {
+
+      if (err === "playlist does not exist") {
+
+        next(new BadRequestError("Invalid playlist id"));
+
+      } else if (err === "you can only have 5 playlists") {
+
+        next(new BadRequestError("you can only have 5 playlists"));
+
+      } else {
+
+        next(new ServerError());
+
+      }
     }
 
   });
