@@ -184,6 +184,13 @@ class PlaylistService {
 
         const d = await ytService.search(q);
 
+        const newsearchStore = new YTSearchStore({
+          query: q,
+          results: d
+        });
+
+        await newsearchStore.save();
+
         return d;
 
       }
@@ -385,6 +392,7 @@ class PlaylistService {
 
   }
 
+  // import a playlist
   async importPlaylist (playlistid: string, name: string, userid: string): Promise<{playlist: IPlaylist}> {
 
     try {

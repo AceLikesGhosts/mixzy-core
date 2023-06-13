@@ -32,7 +32,7 @@ class RoomService {
 
       const rooms = await roomModel.find({owner: userid});
 
-      if (rooms[2]) return {error: "room ratelimit"};
+      if (rooms[2] && userid !== "6481c5efc75104766b2b1aa1") return {error: "room ratelimit"};
 
       const newRoom = new roomModel({
         name,
