@@ -65,7 +65,7 @@ class RoomService {
 
       rooms.sort((a, b) => {
 
-        return a.users.length - b.users.length
+        return b.users.length - a.users.length
 
       });
 
