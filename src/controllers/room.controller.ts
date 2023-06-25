@@ -71,19 +71,9 @@ export default (redis: Redis) => {
 
       const page = parseInt(req.params.page);
 
-      const rooms = await roomService.fetchPopularRooms();
+      const rooms = await roomService.fetchPopularRooms(redis);
 
       const paginatedRooms = await roomService.paginateRooms(rooms, 20, page);
-
-      let roomsToReturn = [];
-
-      for (let i = 0; i < paginatedRooms.items.length; i++) {
-       
-        let acRoom = _.pick(paginatedRooms.items[i], ["id", "name", "users", "current_dj", "slug"]);
-
-        roomsToReturn.push(acRoom);
-        
-      }
 
       res.status(200).json({next: paginatedRooms.next, prev: paginatedRooms.prev, totalPages: paginatedRooms.totalPages, items: paginatedRooms.items});
 
@@ -106,7 +96,21 @@ export default (redis: Redis) => {
 
       if (!room) return next(new NotFoundError("Room not found"));
 
-      const actualRoom = _.pick(room, ["id", "slug", "current_dj", "welcome_message", "description", "name", "users", "queue_cycle", "queue_locked", "queue_history"]);
+      const rRoom = await redis.get(`rooms:${room.id}`);
+
+      if (!rRoom) return next(new NotFoundError("Room not found"));
+
+      const parsedRoom = JSON.parse(rRoom);
+
+      let combine = {
+        name: room.name,
+        slug: room.slug,
+        id: room.id,
+        current_dj: parsedRoom.current_dj,
+        users: parsedRoom.users
+      }
+
+      const actualRoom = _.pick(combine, ["id", "slug", "current_dj", "welcome_message", "description", "name", "users", "queue_cycle", "queue_locked", "queue_history"]);
 
       res.status(200).json(actualRoom);
 

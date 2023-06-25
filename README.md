@@ -1,11 +1,11 @@
-![musicpad logo](https://i.imgur.com/YnWT1Hb.png)
+![Mixzy logo](https://i.imgur.com/kAKMfIW.png)
 
-Musicpad, A collaborative music listening platform
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.2.0.
 
-Other Musicpad Repos:
+Other Mixzy Repos:
 
-- [Musicpad Frontend](https://github.com/musicpadnet/musicpad-frontend)
-- [Musicpad Websocket](https://github.com/musicpadnet/musicpad-websocket)
+- [Mixzy Frontend](https://github.com/mixzyhq/mixzy-frontend)
+- [Mixzy Websocket](https://github.com/mixzyhq/mixzy-websocket)
 
 ## Preview of what it looks like
 ![Preview](https://i.imgur.com/lZlxO1Y.png)

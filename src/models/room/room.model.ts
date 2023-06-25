@@ -40,23 +40,6 @@ const Room = new mongoose.Schema({
     by: {type: mongoose.Types.ObjectId, required: true, ref: "accounts"},
     at: {type: Date, required: true, default: Date.now}
   }],
-  current_dj: {
-    user: {type: mongoose.Types.ObjectId, default: null, ref: "accounts"},
-    song: {
-      title: {type: String, default: null},
-      duration: {type: Number, default: null},
-      time: {type: Number, default: null},
-      upvotes: {type: Number, default: 0},
-      downvotes: {type: Number, default: 0},
-      thumbnail: {type: String, default: null},
-      grabs: {type: Number, default: 0}
-    }
-  },
-  users: [{
-    type: mongoose.Types.ObjectId,
-    required: true,
-    ref: "accounts"
-  }],
   queue_history: [{
     played_by: {type: mongoose.Types.ObjectId, required: true, ref: "accounts"},
     title: {type: String, required: true},

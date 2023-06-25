@@ -1,7 +1,7 @@
 {
-  "name": "mixtrack-restful",
+  "name": "mixzy-core",
   "version": "0.0.1",
-  "description": "MixTrack, A collaborative music listening platform",
+  "description": "Mixzy, A collaborative music listening platform",
   "main": "dist",
   "scripts": {
     "lint": "eslint src",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lifeline1337/mixtrack-restful.git"
+    "url": "git+https://github.com/mixzyhq/mixzy-core.git"
   },
   "author": "LIFELINE",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lifeline1337/mixtrack-restful/issues"
+    "url": "https://github.com/mixzyhq/mixzy-core/issues"
   },
-  "homepage": "https://github.com/lifeline1337/mixtrack-restful#readme",
+  "homepage": "https://github.com/mixzyhq/mixzy-core#readme",
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.50.0",
     "@typescript-eslint/parser": "^5.50.0",

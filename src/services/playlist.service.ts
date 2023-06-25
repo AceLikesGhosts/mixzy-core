@@ -443,15 +443,33 @@ class PlaylistService {
 
         }
 
-        const newPlaylist = await new playlistModel({
-          name,
-          owner: userid,
-          songs: _.flatten(videos)
-        });
+        if (!playlists[0]) {
 
-        const newpl = await newPlaylist.save();
+          const newPlaylist = await new playlistModel({
+            name,
+            owner: userid,
+            songs: _.flatten(videos),
+            isActive: true
+          });
+  
+          const newpl = await newPlaylist.save();
+  
+          return {playlist: newpl};
 
-        return {playlist: newpl};
+        } else {
+
+          const newPlaylist = await new playlistModel({
+            name,
+            owner: userid,
+            songs: _.flatten(videos),
+            isActive: false
+          });
+  
+          const newpl = await newPlaylist.save();
+  
+          return {playlist: newpl};
+
+        }
 
       }
 
