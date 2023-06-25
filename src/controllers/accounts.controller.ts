@@ -1,19 +1,3 @@
-/*
-  __  __           _                      _ 
- |  \/  |         (_)                    | |
- | \  / |_   _ ___ _  ___ _ __   __ _  __| |
- | |\/| | | | / __| |/ __| '_ \ / _` |/ _` |
- | |  | | |_| \__ \ | (__| |_) | (_| | (_| |
- |_|  |_|\__,_|___/_|\___| .__/ \__,_|\__,_|
-                         | |                
-                         |_|                
-
-* Author: Jordan (LIFELINE) <hello@lifeline1337.dev>
-* Copyright (C) 2023 LIFELINE
-* Repo: https://github.com/musicpadnet/musicpad-core
-* LICENSE: MIT <https://github.com/musicpadnet/musicpad-core/blob/main/LICENSE>
-*/
-
 import express from "express";
 import { auth } from "../auth.middleware";
 import { BadRequestError, RateLimitError, ServerError } from "../error";
@@ -144,7 +128,7 @@ export default (redis: Redis) => {
           let params = {
             Key: req.res?.locals.webp,
             Body: data,
-            Bucket: "mixtrack",
+            Bucket: "mixzy",
             ACL: "public-read",
             ContentType: "image/webp"
           }
@@ -166,7 +150,7 @@ export default (redis: Redis) => {
           } else {
   
             let params = {
-              Bucket: 'mixtrack',
+              Bucket: 'mixzy',
               Key: res.locals.user.profile_image
             }
     
@@ -210,8 +194,6 @@ export default (redis: Redis) => {
 
         } else {
 
-          // yert berp the the jet
-
           p++;
 
           redis.set(`${res.locals.user.id}:pic:timeout`, p.toString(), "EX", (60*30)).then().catch();
@@ -242,7 +224,7 @@ export default (redis: Redis) => {
             let params = {
               Key: req.res?.locals.webp,
               Body: data,
-              Bucket: "mixtrack",
+              Bucket: "mixzy",
               ACL: "public-read",
               ContentType: "image/webp"
             }
@@ -264,7 +246,7 @@ export default (redis: Redis) => {
             } else {
   
               let params = {
-                Bucket: 'mixtrack',
+                Bucket: 'mixzy',
                 Key: res.locals.user.profile_image
               }
     

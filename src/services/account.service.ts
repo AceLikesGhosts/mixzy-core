@@ -1,19 +1,3 @@
-/*
-  __  __           _                      _ 
- |  \/  |         (_)                    | |
- | \  / |_   _ ___ _  ___ _ __   __ _  __| |
- | |\/| | | | / __| |/ __| '_ \ / _` |/ _` |
- | |  | | |_| \__ \ | (__| |_) | (_| | (_| |
- |_|  |_|\__,_|___/_|\___| .__/ \__,_|\__,_|
-                         | |                
-                         |_|                
-
-* Author: Jordan (LIFELINE) <hello@lifeline1337.dev>
-* Copyright (C) 2023 LIFELINE
-* Repo: https://github.com/musicpadnet/musicpad-core
-* LICENSE: MIT <https://github.com/musicpadnet/musicpad-core/blob/main/LICENSE>
-*/
-
 import argon2 from "argon2";
 import Redis from "ioredis";
 import accountModel from "../models/account/account.model";
@@ -43,7 +27,7 @@ class AccountService {
       userid
     }
     
-    const hmac = await crypto.createHmac("sha1", "mixtrackavatars").update(payload.toString()).digest("hex");
+    const hmac = await crypto.createHmac("sha1", "mixzyavatars").update(payload.toString()).digest("hex");
 
     return hmac;
 
