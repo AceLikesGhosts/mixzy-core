@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   api:
-    container_name: 'musicpad-restful-api'
+    container_name: 'mixzy-core'
     build: .
     ports:
       - 3000:3000
@@ -10,12 +10,12 @@ services:
       - cache
     env_file: '.env'
   database:
-    container_name: 'musicpad-database'
+    container_name: 'mixzy-database'
     image: mongo
     ports:
       - 27017:27017
   cache:
-    container_name: 'musicpad-cache'
+    container_name: 'mixzy-cache'
     image: redis
     ports:
       - 6379:6379

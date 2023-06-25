@@ -18,6 +18,7 @@ import { Redis } from "ioredis";
 import _ from "lodash";
 import roomModel from "../models/room/room.model";
 import IRoom from "../models/room/room.type";
+import { IndexDocumentFilterSensitiveLog } from "@aws-sdk/client-s3";
 
 class RoomService {
 
@@ -42,6 +43,24 @@ class RoomService {
 
       const savedRoom = await newRoom.save();
 
+      await redis.set(`rooms:${savedRoom.id}`, JSON.stringify({
+        id: savedRoom.id,
+        current_dj: {
+          user: null,
+          song: {
+            title: null,
+            duration: null,
+            time: null,
+            upvotes: 0,
+            downvotes: 0,
+            thumbnail: null,
+            grabs: 0,
+            cid: null
+          }
+        },
+        users: []
+      }));
+
       await roomModel.updateOne({_id: savedRoom.id}, {$addToSet: {staff: {user: userid, promoted_by: userid, rank: 755}}});
 
       const updatedRoom = await roomModel.findOne({_id: savedRoom.id});
@@ -56,20 +75,62 @@ class RoomService {
 
   }
 
-
-  async fetchPopularRooms (): Promise<any[]> {
+  /**
+   * fetch popular rooms
+   * @param redis 
+   * @returns 
+   */
+  async fetchPopularRooms (redis: Redis): Promise<any[]> {
 
     try {
 
-      const rooms = await roomModel.find().limit(300).exec();
+      const rooms = await roomModel.find({}).limit(300).exec();
 
-      rooms.sort((a, b) => {
+      const roomsids = rooms.map(room => {
+
+        return `rooms:${room.id}`;
+
+      });
+
+      const rRooms = await redis.mget(roomsids);
+
+      const parsedRooms: any[] = rRooms.map(room => {
+        
+        if (!room) return console.log("unable to parse room");
+
+        return JSON.parse(room);
+
+      });
+
+      const arr: any[] = [];
+
+      rooms.forEach( async (room: IRoom, i) => {
+
+        const findIndexOfRoomIdInArr = parsedRooms.findIndex(r => r.id === room.id);
+
+        if (findIndexOfRoomIdInArr !== -1) {
+
+          let obj = {
+            name: room.name,
+            id: room.id,
+            slug: room.slug,
+            current_dj: parsedRooms[findIndexOfRoomIdInArr].current_dj,
+            users: parsedRooms[findIndexOfRoomIdInArr].users
+          }
+
+          arr.push(obj);
+
+        }
+
+      });
+
+      arr.sort((a, b) => {
 
         return b.users.length - a.users.length
 
       });
 
-      return rooms;
+      return arr;
 
     } catch (err) {
 
