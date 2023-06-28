@@ -4,7 +4,8 @@ import joi from "joi";
 export const registerValidator = joi.object({
   email: joi.string().required().email().max(300),
   username: joi.string().required().min(3).max(45).regex(new RegExp("^(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._ ]+(?<![_.])$")),
-  password: joi.string().required().min(7).max(300)
+  password: joi.string().required().min(7).max(300),
+  captcha: joi.string().required()
 });
 
 // login validator
