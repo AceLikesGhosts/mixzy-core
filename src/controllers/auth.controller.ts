@@ -8,6 +8,8 @@ import { auth } from "../auth.middleware";
 import accessTokenModel from "../models/access_token/access_token.model";
 import refreshTokenModel from "../models/refresh_token/refresh_token.model";
 import { ParseJSON, ParseURLEncoded } from "../parsing.middleware";
+import { verify } from "hcaptcha";
+import config from "config";
 
 export default () => {
 
@@ -19,6 +21,18 @@ export default () => {
     const {error} = registerValidator.validate(req.body);
 
     if (error) return next(new BadRequestError(error.details[0].message));
+
+    try {
+
+      const data = await verify(config.get("captcha.secret"), req.body.captcha);
+
+      if (!data.success) return next(new BadRequestError("Invalid Captcha"));
+
+    } catch (err) {
+
+      return next(new BadRequestError("Invalid Captcha"));
+
+    }
 
     try {
 

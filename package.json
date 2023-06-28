@@ -42,6 +42,7 @@
     "config": "^3.3.9",
     "durationts": "^0.1.2",
     "express": "^4.18.2",
+    "hcaptcha": "^0.1.1",
     "ioredis": "^5.3.0",
     "joi": "^17.7.1",
     "jsonwebtoken": "^9.0.0",

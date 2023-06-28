@@ -28,6 +28,7 @@ class RoomService {
 
       await redis.set(`rooms:${savedRoom.id}`, JSON.stringify({
         id: savedRoom.id,
+        waitlist: [],
         current_dj: {
           user: null,
           song: {
