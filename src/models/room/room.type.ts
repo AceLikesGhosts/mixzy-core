@@ -50,10 +50,11 @@ export default interface IRoom extends mongoose.Schema {
     title: string,
     duration: number,
     thumbnail: string,
-    played_by: IAccount,
+    played_by: IAccount | {id: string, username: string},
     timestamp: Date,
     upvotes: number,
     grabs: number,
     downvotes: number
-  }[]
+  }[],
+  background: string | null
 }

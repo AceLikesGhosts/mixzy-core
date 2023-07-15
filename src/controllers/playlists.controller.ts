@@ -182,7 +182,7 @@ export default () => {
 
         if (!playlist) return next(new BadRequestError("Invalid id"));
 
-        const index = playlist.songs.length - 1;
+        const index = 0;
 
         res.status(200).json({song: playlist.songs[index]});
 
@@ -394,6 +394,36 @@ export default () => {
         next(new ServerError());
 
       }
+    }
+
+  });
+
+
+  // shuffle playlist - PUT "/_/playlists/:id/shuffle"
+  api.put("/:id/shuffle", auth, ParseJSON, async (req, res, next) => {
+
+    try {
+
+      const playlist = await playlistModel.findOne({_id: req.params.id}).populate("owner").exec();
+
+      if (!playlist) return next(new BadRequestError("Invalid Playlist"));
+
+      if (res.locals.user.id !== playlist.owner.id) return next(new ForbiddenError("Access Denied"));
+
+      let playlistSongsShuffled = _.shuffle(playlist.songs);
+
+      playlist.songs = playlistSongsShuffled;
+
+      await playlist.save();
+
+      const playlists = await playlistModel.find({owner: res.locals.user.id});
+
+      res.status(200).json({playlists});
+
+    } catch (err) {
+
+      next(new ServerError());
+
     }
 
   });

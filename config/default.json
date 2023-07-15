@@ -7,7 +7,10 @@
   "yt": null,
   "s3": {
     "accessKey": null,
-    "accessSecret": null
+    "accessSecret": null,
+    "bucket": "mixzy",
+    "region": "sjc1",
+    "endpoint": "https://sjc1.vultrobjects.com:443"
   },
   "captcha": {
     "secret": "0x0000000000000000000000000000000000000000"

@@ -2,8 +2,66 @@ import { Redis } from "ioredis";
 import _ from "lodash";
 import roomModel from "../models/room/room.model";
 import IRoom from "../models/room/room.type";
+import multer from "multer";
+import crypto from "crypto";
+import config from "config";
+import { S3Client } from "@aws-sdk/client-s3";
 
 class RoomService {
+
+  S3 = new S3Client({
+    credentials: {
+      accessKeyId: config.get("s3.accessKey"),
+      secretAccessKey: config.get("s3.accessSecret")
+    },
+    endpoint: config.get("s3.endpoint"),
+    region: config.get("s3.region")
+  });
+
+  genPfpHMAC (): string {
+
+    const payload = {
+      time: Date.now(),
+      random: crypto.randomBytes(20).toString("hex")
+    }
+    
+    const hmac = crypto.createHmac("sha1", crypto.randomBytes(20).toString("hex")).update(payload.toString()).digest("hex");
+
+    return hmac;
+
+  }
+
+  backgroundUpload = multer({
+    limits: {fileSize: 5242880},
+    fileFilter: (req, file, cb) => {
+
+      if (file.size > 5242880) return cb(new Error("File size limit is 5MB"));
+
+      if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg") {
+        cb(null, true);
+      } else {
+        return cb(new Error("Only .png, .jpg and .jpeg format allowed!"))
+      }
+
+    },
+    storage: multer.diskStorage({
+      destination: "/tmp", // store in local storage file system
+      filename: async (req, file, cb) => {
+
+        let key = this.genPfpHMAC();
+
+        switch (file.mimetype) {
+          case "image/jpg":
+            return cb(null, `${key}.jpg`);
+          case "image/jpeg":
+            return cb(null, `${key}.jpeg`);
+          case "image/png":
+            return cb(null, `${key}.png`)
+        }
+
+      },
+    })
+  }).single("background");
 
   // room creation
   async createRoom (redis: Redis, name: string, slug: string, userid: string): Promise<{error?: string, room?: IRoom}> {
@@ -35,10 +93,10 @@ class RoomService {
             title: null,
             duration: null,
             time: null,
-            upvotes: 0,
-            downvotes: 0,
+            upvotes: [],
+            downvotes: [],
             thumbnail: null,
-            grabs: 0,
+            grabs: [],
             cid: null
           }
         },
@@ -114,6 +172,16 @@ class RoomService {
 
       });
 
+      arr.forEach(async (r, i) => {
+
+        if (r.users.length === 0) {
+
+          arr.splice(i, 1);
+
+        }
+
+      });
+
       return arr;
 
     } catch (err) {
@@ -145,6 +213,66 @@ class RoomService {
     }
 
     return d;
+
+  }
+
+  /**
+   * update room desc service method
+   * @param roomid string
+   * @param userid string
+   * @returns 
+   */
+  async updateDescription (roomid: string, userid: string, desc: string): Promise<{error?: string, desc?: string}> {
+
+    try {
+
+      const room = await roomModel.findOne({_id: roomid}).populate("owner").exec();
+
+      if (!room) return {error: "invalid room id"};
+
+      if (room.owner?.id !== userid) return {error: "forbidden"};
+
+      room.description = desc;
+
+      await room.save();
+
+      return {desc: desc};
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+  /**
+   * Update Room Welcome Message Service Method
+   * @param roomid string
+   * @param userid string
+   * @param message string
+   */
+  async updateRoomWelcomeMessage (roomid: string, userid: string, message: string): Promise<{error?: string, message?: string}> {
+
+    try {
+
+      const room = await roomModel.findOne({_id: roomid}).populate("owner").exec();
+
+      if (!room) return {error: "invalid room id"};
+
+      if (room.owner?.id !== userid) return {error: "forbidden"};
+
+      room.welcome_message = message;
+
+      await room.save();
+
+      return {message};
+
+    } catch (err) {
+
+      throw err;
+
+    }
 
   }
 

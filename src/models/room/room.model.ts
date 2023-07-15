@@ -33,14 +33,15 @@ const Room = new mongoose.Schema({
     upvotes: {type: Number, required: true},
     grabs: {type: Number, required: true},
     downvotes: {type: Number, required: true},
-    at: {type: Date, required: true, default: Date.now}
+    timestamp: {type: Date, required: true, default: Date.now}
   }],
   staff: [{
     user: {type: mongoose.Types.ObjectId, required: true, ref: "accounts"},
     promoted_by: {type: mongoose.Types.ObjectId, required: true, ref: "accounts"},
     rank: {type: Number, required: true},
     at: {type: Date, required: true, default: Date.now}
-  }]
+  }],
+  background: {type: String, default: null}
 });
 
 Room.set("toJSON", {

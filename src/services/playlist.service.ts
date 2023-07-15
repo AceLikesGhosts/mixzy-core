@@ -208,7 +208,18 @@ class PlaylistService {
 
       if (!video[0]) return {error: "Video does not exist"};
 
-      await playlistModel.updateOne({_id: playlistid}, {$push: {songs: {cid: video[0].cid, title: video[0].title, duration: video[0].duration, thumbnail: video[0].thumbnail, unavailable: video[0].unavailable, $position: 0}}});
+      await playlistModel.updateOne({_id: playlistid}, {
+        $push: {
+          songs: { 
+            $each: [{
+              cid: video[0].cid, 
+              title: video[0].title, 
+              duration: video[0].duration, 
+              thumbnail: video[0].thumbnail, 
+              unavailable: video[0].unavailable
+            }],
+            $position: 0
+          }}});
 
       return {success: true};
 

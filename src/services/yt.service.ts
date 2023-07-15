@@ -24,7 +24,7 @@ class YTService {
       let str = qs.stringify({
         part: "contentDetails,snippet,status",
         id: cidsStr,
-        fields: "items(id,contentDetails/duration,snippet(title,thumbnails/default),status/uploadStatus)",
+        fields: "items(id,contentDetails/duration,snippet(title,thumbnails/high),status/uploadStatus)",
         key: config.get("yt")
       });
 
@@ -66,7 +66,7 @@ class YTService {
           let d = {
             cid: resp.data.items[i].id,
             title: resp.data.items[i].snippet.title,
-            thumbnail: resp.data.items[i].snippet.thumbnails.default.url,
+            thumbnail: resp.data.items[i].snippet.thumbnails.high.url,
             duration: dur,
             unavailable: resp.data.items[i].status.uploadStatus != 'processed' && resp.data.items[i].status.uploadStatus != 'uploaded',
           }
