@@ -16,23 +16,25 @@ class AccountService {
       accessKeyId: config.get("s3.accessKey"),
       secretAccessKey: config.get("s3.accessSecret")
     },
-    endpoint: "https://sjc1.vultrobjects.com:443",
-    region: "sjc1"
+    endpoint: config.get("s3.endpoint"),
+    region: config.get("s3.region")
   });
 
-  async genPfpHMAC (userid: string): Promise<string> {
+  // gen pfp HMAC
+  genPfpHMAC (): string {
 
     const payload = {
       time: Date.now(),
-      userid
+      random: crypto.randomBytes(20).toString("hex")
     }
     
-    const hmac = await crypto.createHmac("sha1", "mixzyavatars").update(payload.toString()).digest("hex");
+    const hmac = crypto.createHmac("sha1", crypto.randomBytes(20).toString("hex")).update(payload.toString()).digest("hex");
 
     return hmac;
 
   }
 
+  // avatar upload
   avatarUpload = multer({
     limits: {fileSize: 5242880},
     fileFilter: (req, file, cb) => {
@@ -49,22 +51,15 @@ class AccountService {
     storage: multer.diskStorage({
       destination: "/tmp", // store in local storage file system
       filename: async (req, file, cb) => {
-        
-        const key = await this.genPfpHMAC(req.res?.locals.user.id);
 
-        if (!req.res) return console.log("internal error");
-
-        req.res.locals.webp = `_avatars/${req.res.locals.user.id}/${key}.webp`;
+        let key = this.genPfpHMAC();
 
         switch (file.mimetype) {
           case "image/jpg":
-            req.res.locals.key = `_avatars/${req.res.locals.user.id}/${key}.jpg`;
             return cb(null, `${key}.jpg`);
           case "image/jpeg":
-            req.res.locals.key = `_avatars/${req.res.locals.user.id}/${key}.jpeg`;
             return cb(null, `${key}.jpeg`);
           case "image/png":
-            req.res.locals.key = `_avatars/${req.res.locals.user.id}/${key}.png`;
             return cb(null, `${key}.png`)
         }
 
@@ -131,6 +126,7 @@ class AccountService {
 
   }
 
+  // fetch logged in user object
   async fetchLoggedinAccount (userid: string): Promise<any> {
 
     try {

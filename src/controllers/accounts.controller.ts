@@ -9,6 +9,9 @@ import accountModel from "../models/account/account.model";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import fs from "fs";
+import config from "config";
+
+let bucket: any = config.get("s3.bucket");
 
 export default (redis: Redis) => {
 
@@ -120,15 +123,21 @@ export default (redis: Redis) => {
 
           }
 
+          console.log(req.file);
+
           if (!req.file) return next(new ServerError());
 
           // remove file from local storage cause we have the buffer
           fs.rmSync(req.file.path, {force: true});
 
+          let filekey = req.file.filename.split(".")[0];
+
+          let actualKey = `_avatars/${res.locals.user.id}/${filekey}.webp`;
+
           let params = {
-            Key: req.res?.locals.webp,
+            Key: actualKey,
             Body: data,
-            Bucket: "mixzy",
+            Bucket: bucket,
             ACL: "public-read",
             ContentType: "image/webp"
           }
@@ -137,12 +146,14 @@ export default (redis: Redis) => {
 
           if (!res.locals.user.profile_image || res.locals.user.profile_image === null) {
 
-            accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: req.res?.locals.web}}).then(() => {
-  
-              res.status(200).json({image: req.res?.locals.webp});
+            accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey}}).then(() => {
+
+              res.status(200).json({image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey});
   
             }).catch(err => {
   
+              console.log(err);
+
               next(new ServerError());
   
             });
@@ -150,18 +161,22 @@ export default (redis: Redis) => {
           } else {
   
             let params = {
-              Bucket: 'mixzy',
-              Key: res.locals.user.profile_image
+              Bucket: bucket,
+              Key: res.locals.user.profile_image.replace("https://sjc1.vultrobjects.com/mixzy/", "")
             }
     
             accountService.S3.send(new DeleteObjectCommand(params)).then(() => {
     
-              accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: req.res?.locals.webp}}).then(() => {
-  
-                res.status(200).json({image: req.res?.locals.webp});
+              accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey}}).then(() => {
+
+                console.log("does save");
+
+                res.status(200).json({image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey});
   
               }).catch(err => {
   
+                console.log(err);
+
                 next(new ServerError());
   
               });
@@ -177,6 +192,9 @@ export default (redis: Redis) => {
           }
 
         }).catch(err => {
+
+          console.log(err);
+
           next(new ServerError());
         });
 
@@ -184,7 +202,7 @@ export default (redis: Redis) => {
 
         let p = parseInt(data);
 
-        if (p >= 3) {
+        if (p >= 4) {
 
           if (!req.file) return next(new ServerError());
 
@@ -221,10 +239,16 @@ export default (redis: Redis) => {
             // remove file from local storage cause we have the buffer
             fs.rmSync(req.file.path, {force: true});
 
+            let filekey = req.file.filename.split(".")[0];
+
+            let actualKey = `_avatars/${res.locals.user.id}/${filekey}.webp`;
+
+            console.log(actualKey);
+
             let params = {
-              Key: req.res?.locals.webp,
+              Key: actualKey,
               Body: data,
-              Bucket: "mixzy",
+              Bucket: bucket,
               ACL: "public-read",
               ContentType: "image/webp"
             }
@@ -233,11 +257,13 @@ export default (redis: Redis) => {
 
             if (!res.locals.user.profile_image || res.locals.user.profile_image === null) {
 
-              accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: req.res?.locals.web}}).then(() => {
-  
-                res.status(200).json({image: req.res?.locals.webp});
+              accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey}}).then(() => {
+
+                res.status(200).json({image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey});
   
               }).catch(err => {
+
+                console.log(err);
   
                 next(new ServerError());
   
@@ -246,18 +272,22 @@ export default (redis: Redis) => {
             } else {
   
               let params = {
-                Bucket: 'mixzy',
-                Key: res.locals.user.profile_image
+                Bucket: bucket,
+                Key: res.locals.user.profile_image.replace("https://sjc1.vultrobjects.com/mixzy/", "")
               }
+
+              console.log(params.Key);
     
               accountService.S3.send(new DeleteObjectCommand(params)).then(() => {
     
-                accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: req.res?.locals.webp}}).then(() => {
-  
-                  res.status(200).json({image: req.res?.locals.webp});
+                accountModel.updateOne({_id: res.locals.user.id}, {$set: {profile_image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey}}).then(() => {
+                
+                  res.status(200).json({image: "https://sjc1.vultrobjects.com/mixzy/" + actualKey});
   
                 }).catch(err => {
   
+                  console.log(err);
+
                   next(new ServerError());
   
                 });
@@ -273,6 +303,8 @@ export default (redis: Redis) => {
             }
 
           }).catch(err => {
+            console.log(err);
+
             next(new ServerError());
           });
 
@@ -281,6 +313,8 @@ export default (redis: Redis) => {
       }
 
     }).catch(err => {
+
+      console.log(err);
 
       next(new ServerError());
 
