@@ -171,8 +171,6 @@ export default (redis: Redis) => {
 
       });
 
-      room.queue_history = rQueue_History;
-
       let combine = {
         name: room.name,
         slug: room.slug,
@@ -185,7 +183,7 @@ export default (redis: Redis) => {
         welcome_message: room.welcome_message,
         queue_cycle: room.queue_cycle,
         queue_locked: room.queue_locked,
-        queue_history: room.queue_history,
+        queue_history: rQueue_History,
         owner: {
           id: room.owner?.id,
           username: room.owner?.username,

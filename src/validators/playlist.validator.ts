@@ -19,3 +19,8 @@ export const RenamePlaylistValidator = joi.object({
 export const ImportPlaylistValidator = joi.object({
   name: joi.string().required().max(50)
 });
+
+export const importPlaylistSCValidator = joi.object({
+  url: joi.string().required(),
+  name: joi.string().required().max(50)
+});

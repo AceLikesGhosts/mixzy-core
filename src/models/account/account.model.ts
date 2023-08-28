@@ -6,6 +6,8 @@ const Account = new mongoose.Schema({
   username: {type: String, required: true, unique: true},
   profile_image: {type: String, default: null},
   hash: {type: String, required: true},
+  two_factor: {type: Boolean, required: true, default: false},
+  two_factor_secret: {type: String, default: null},
   rank: {type: Number, required: true, default: 0}
 });
 

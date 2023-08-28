@@ -6,5 +6,7 @@ export default interface IAccount extends mongoose.Document {
   username: string,
   profile_image: string | null,
   hash: string,
-  rank: number
+  rank: number,
+  two_factor: boolean,
+  two_factor_secret: string
 }

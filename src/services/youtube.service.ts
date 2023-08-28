@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import Duration from "durationts";
 import config from "config";
 import qs from "qs";
-import YTSearchRespData, { YTVideoQueryRespData } from "./yt.service.types";
+import YTSearchRespData, { YTVideoQueryRespData } from "./youtube.service.types";
 
 const defaultUrl = "https://youtube.googleapis.com/youtube/v3";
 

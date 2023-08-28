@@ -5,6 +5,7 @@
   "access_secret": null,
   "refresh_secret": null,
   "yt": null,
+  "sc": null,
   "s3": {
     "accessKey": null,
     "accessSecret": null,
