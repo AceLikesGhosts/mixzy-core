@@ -4,6 +4,7 @@
   "access_secret": "ACCESS_SECRET",
   "refresh_secret": "REFRESH_SECRET",
   "yt": "YT_KEY",
+  "sc": "SC_KEY",
   "s3": {
     "accessKey": "S3_ACCESS",
     "accessSecret": "S3_SECRET"

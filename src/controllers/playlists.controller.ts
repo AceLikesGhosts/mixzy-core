@@ -3,9 +3,10 @@ import { auth } from "../auth.middleware";
 import { BadRequestError, ForbiddenError, NotFoundError, RateLimitError, ServerError } from "../error";
 import playlistService from "../services/playlist.service";
 import { ParseJSON, ParseURLEncoded } from "../parsing.middleware";
-import { CreatePlaylistValidator, DeletePlaylistValidator, ImportPlaylistValidator, PlaylistYTSearch, RenamePlaylistValidator } from "../validators/playlist.validator";
+import { CreatePlaylistValidator, DeletePlaylistValidator, ImportPlaylistValidator, PlaylistYTSearch, RenamePlaylistValidator, importPlaylistSCValidator } from "../validators/playlist.validator";
 import _ from "lodash";
 import playlistModel from "../models/playlist/playlist.model";
+import scService from "../services/soundcloud.service";
 
 export default () => {
 
@@ -154,6 +155,26 @@ export default () => {
 
   });
 
+  // search soundcloud - GET "/_/playlists/search/sc"
+  api.get("/search/sc", ParseJSON, auth, async (req: express.Request, res: express.Response, next:express.NextFunction) => {
+    
+    if (!req.query.q) return next(new BadRequestError("Invalid Query"));
+
+    try {
+
+      // @ts-ignore
+      const d = await scService.search(req.query.q);
+
+      res.status(200).json(d);
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
   // add song to playlist - PUT "/_/playlists/:id/song/:cid"
   api.put("/:id/song/:cid", auth, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
 
@@ -172,7 +193,7 @@ export default () => {
           case "Maximum songs":
             return next(new RateLimitError("Maxiumum songs in a playlist reached"));
           case "Video does not exist":
-            return next(new NotFoundError("Video not found."))
+            return next(new NotFoundError("Video not found."));
 
         }
 
@@ -197,6 +218,20 @@ export default () => {
     }
 
   });
+
+  /*api.put("/sc/:id/song/:cid", async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+    try {
+
+
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });*/
 
   // fetch playlist songs - GET "/_/playlists/:id/songs/:page"
   api.get("/:id/songs", auth, async (req, res, next) => {
@@ -398,6 +433,39 @@ export default () => {
 
   });
 
+  // import soundcloud playlist - POST "/_/playlists/import/sc"
+  api.post("/sc/import", auth, ParseJSON, async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+    const {error} = importPlaylistSCValidator.validate(req.body);
+
+    if (error) return next(new BadRequestError(error.details[0].message));
+
+    try {
+
+      const playlists = await playlistModel.find({owner: res.locals.user.id});
+
+      if (playlists.length >= 5) return next(new RateLimitError("You may only have five playlists"));
+
+      const d = await playlistService.importSCPlaylist(req.body.name, req.body.url, res.locals.user.id);
+
+      if (d.success && d.playlist) {
+
+        res.status(200).json({playlist: d.playlist});
+
+      } else {
+
+        next(new BadRequestError("invalid playlist"));
+
+      }
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
 
   // shuffle playlist - PUT "/_/playlists/:id/shuffle"
   api.put("/:id/shuffle", auth, ParseJSON, async (req, res, next) => {
@@ -416,9 +484,21 @@ export default () => {
 
       await playlist.save();
 
-      const playlists = await playlistModel.find({owner: res.locals.user.id});
+      let playlists = await playlistModel.find({owner: res.locals.user.id});
 
-      res.status(200).json({playlists});
+      const returnedPlaylists = playlists.map(obj => {
+
+        return {
+          name: obj.name,
+          id: obj.id,
+          isActive: obj.isActive,
+          songCount: obj.songs.length,
+          songs: obj.songs
+        }
+
+      });
+
+      res.status(200).json({playlists: returnedPlaylists});
 
     } catch (err) {
 

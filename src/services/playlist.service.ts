@@ -3,8 +3,9 @@ import playlistModel from "../models/playlist/playlist.model";
 import _ from "lodash";
 import argon2 from "argon2";
 import IAccount from "../models/account/account.type";
-import ytService from "./yt.service";
+import ytService from "./youtube.service";
 import YTSearchStore from "../models/yt_search_store/yt_search_store.model";
+import scService from "./soundcloud.service";
 
 class PlaylistService {
 
@@ -387,7 +388,7 @@ class PlaylistService {
 
   }
 
-  // import a playlist
+  // import a youtube playlist
   async importPlaylist (playlistid: string, name: string, userid: string): Promise<{playlist: IPlaylist}> {
 
     try {
@@ -465,6 +466,80 @@ class PlaylistService {
           return {playlist: newpl};
 
         }
+
+      }
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
+  // import a soundcloud playlist
+  async importSCPlaylist (name: string, url: string, userid: string): Promise<{success: boolean, playlist: IPlaylist}> {
+
+    try {
+
+      const d = await scService.fetchPlaylist(url);
+
+      if (d.success && d.playlist) {
+
+        const songs = d.playlist.map(obj => {
+          
+          return {
+            cid: obj.id.toString(),
+            title: obj.title,
+            thumbnail: obj.artwork_url ? obj.artwork_url : "https://mixzy.pro/images/soundcloud-icon.jpg",
+            duration: Math.ceil((obj.duration / 1000)),
+            type: "SC",
+            unavailable: false
+          }
+
+        });
+
+        for (let i = 0; i < songs.length; i++) {
+
+          console.log()
+
+        }
+
+        const playlists = await playlistModel.find({owner: userid});
+
+        if (playlists[0]) {
+
+          const newPlaylist = new playlistModel({
+            name: name,
+            songs,
+            owner: userid,
+            isActive: false
+          });
+
+          const savedPlaylist = await newPlaylist.save();
+
+          return {success: true, playlist: savedPlaylist};
+
+        } else {
+
+          const newPlaylist = new playlistModel({
+            name: name,
+            owner: userid,
+            songs,
+            isActive: true
+          });
+
+          await newPlaylist.save();
+
+          const savedPlaylist = await newPlaylist.save();
+
+          return {success: true, playlist: savedPlaylist};
+
+        }
+
+      } else {
+      
+        throw "not a playlist";
 
       }
 
