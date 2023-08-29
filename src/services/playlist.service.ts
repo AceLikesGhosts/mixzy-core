@@ -188,7 +188,7 @@ class PlaylistService {
 
   }
 
-  // add song to playlist
+  // add youtube song to playlist
   async AddSongPlaylist (userid: string, playlistid: string, cid: string): Promise<{error?: string, success?: boolean}> {
 
     try {
@@ -477,7 +477,7 @@ class PlaylistService {
 
   }
 
-  // import a soundcloud playlist
+  // import a soundcloud playlist service method
   async importSCPlaylist (name: string, url: string, userid: string): Promise<{success: boolean, playlist: IPlaylist}> {
 
     try {

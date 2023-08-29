@@ -10,6 +10,7 @@ import refreshTokenModel from "../models/refresh_token/refresh_token.model";
 import { ParseJSON, ParseURLEncoded } from "../parsing.middleware";
 import { verify } from "hcaptcha";
 import config from "config";
+import speakeasy from "speakeasy";
 
 export default () => {
 
@@ -79,9 +80,34 @@ export default () => {
 
       if (await argon2.verify(account.hash, req.body.password) !== true) return next(new BadRequestError("Invalid email or password"));
 
-      const tokens = await authService.genTokens(account.id);
+      if (account.two_factor === true && !req.body.code) {
 
-      res.status(200).json(tokens);
+        res.status(202).json({message: "Two Factor Auth Is Enabled"});
+
+      } else if (account.two_factor === true && req.body.code) {
+
+        console.log(req.body.code);
+
+        const verified = speakeasy.totp.verify({
+          secret: account.two_factor_secret,
+          encoding: "base32",
+          token: req.body.code,
+          window: 6
+        });
+
+        if (!verified) return next(new BadRequestError("invalid two factor code"));
+
+        const tokens = await authService.genTokens(account.id);
+
+        res.status(200).json(tokens);
+
+      } else if (account.two_factor === false) {
+
+        const tokens = await authService.genTokens(account.id);
+
+        res.status(200).json(tokens);
+
+      }
 
     } catch (err) {
 

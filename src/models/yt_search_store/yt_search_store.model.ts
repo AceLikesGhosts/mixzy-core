@@ -8,7 +8,8 @@ const YTSearchStore = new mongoose.Schema({
     title: {type: String, required: true},
     thumbnail: {type: String, required: true},
     duration: {type: Number, required: true},
-    unavailable: {type: Boolean, required: true}
+    unavailable: {type: Boolean, required: true},
+    createdAt: { type: Date, expires: (60*60*24*15), default: Date.now } // expire youtube search record at 15 days to comply with youtube's developer TOS :)))))
   }]
 });
 
