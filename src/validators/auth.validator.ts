@@ -11,7 +11,8 @@ export const registerValidator = joi.object({
 // login validator
 export const loginValidator = joi.object({
   email: joi.string().required().email(),
-  password: joi.string().required()
+  password: joi.string().required(),
+  code: joi.string().max(6).min(6)
 });
 
 // refresh validator

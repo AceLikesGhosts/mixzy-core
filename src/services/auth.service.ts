@@ -55,7 +55,7 @@ class AuthService {
 
   }
 
-  // to do simple function for creating account
+  // account creation service method
   async createAccount (email: string, username: string, password: string): Promise<{error?: string, data?: {access_token: string, refresh_token: string, expires: number}}> {
     
     try {

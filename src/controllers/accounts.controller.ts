@@ -1,7 +1,7 @@
 import express from "express";
 import { auth } from "../auth.middleware";
 import { BadRequestError, RateLimitError, ServerError } from "../error";
-import { changePasswordValidator, changeUsername, usernameLookupValidator } from "../validators/account.validator";
+import { changePasswordValidator, changeUsername, usernameLookupValidator, verify2FaValidator } from "../validators/account.validator";
 import accountService from "../services/account.service";
 import { ParseJSON } from "../parsing.middleware";
 import { Redis } from "ioredis";
@@ -10,6 +10,8 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import fs from "fs";
 import config from "config";
+import speakeasy from "speakeasy";
+import QRCode from "qrcode";
 
 let bucket: any = config.get("s3.bucket");
 
@@ -26,7 +28,7 @@ export default (redis: Redis) => {
 
     try {
 
-      const d = await accountService.changeUsername(redis, req.body.username, req.body.password, res.locals.user);
+      const d = await accountService.changeUsername(redis, req.body.username, req.body.password, req.body.code, res.locals.user);
 
       if (d.error) {
 
@@ -37,6 +39,10 @@ export default (redis: Redis) => {
             return next(new BadRequestError("Invalid password"));
           case "You can only change your username once every 30 days":
             return next(new RateLimitError("You can only change your username once every 30 days"));
+          case "two_factor_enabled":
+            return res.status(202).json({"message": "two factor enabled"});
+          case "invalid code":
+            return next(new BadRequestError("Invalid Code"));
         }
 
       } else {
@@ -60,11 +66,37 @@ export default (redis: Redis) => {
 
     try {
 
-      const d = await accountService.changePassword(req.body.current_password, req.body.new_password, res.locals.user);
+      const d = await accountService.changePassword(req.body.current_password, req.body.new_password, req.body.code, res.locals.user);
 
-      if (d.error) return next(new BadRequestError("Invalid password"));
+      if (d.error) {
 
-      res.status(200).json(d.tokens);
+        switch (d.error) {
+
+          case "Invalid password":
+
+            next(new BadRequestError("invalid password"));
+            
+          break;
+
+          case "two_factor_enabled":
+            
+            res.status(202).json({message: "two factor enabled"});
+
+          break;
+
+          case "invalid 2fa code":
+
+            next(new BadRequestError("invalid code"));
+
+          break;
+
+        }
+
+      } else {
+
+        res.status(200).json(d.tokens);
+
+      }
 
     } catch (err) {
       next(new ServerError());
@@ -332,6 +364,68 @@ export default (redis: Redis) => {
       res.status(200).json(d);
 
     } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
+  // gen 2fa secret - POST "/_/accounts/2fa/gen"
+  api.post("/2fa/gen", auth, async (req, res, next) => {
+
+    try {
+
+      if (res.locals.user.two_factor === true) return next(new BadRequestError("Two Factor is already active"));
+
+      const temp_secret = speakeasy.generateSecret({length: 32});
+
+      await accountModel.updateOne({_id: res.locals.user.id}, {$set: {two_factor_secret: temp_secret.base32}});
+
+      temp_secret.otpauth_url
+
+      // @ts-ignore
+      QRCode.toDataURL(temp_secret.otpauth_url, (err, data_url) => {
+
+        if (err) return next(new ServerError());
+
+        res.status(200).json({secret: temp_secret.base32, qrCode: data_url});
+
+      });
+
+    } catch (err) {
+
+      next(new ServerError());
+
+    }
+
+  });
+
+  // verify and enable 2fa - POST "/_/accounts/2fa/verify"
+  api.post("/2fa/verify", auth, ParseJSON, async (req, res, next) => {
+
+    const {error} = verify2FaValidator.validate(req.body);
+
+    if (error) return next(new BadRequestError(error.details[0].message));
+
+    try {
+
+      const verified = speakeasy.totp.verify({
+        secret: res.locals.user.two_factor_secret,
+        encoding: "base32",
+        token: req.body.code,
+        window: 6
+      });
+
+      if (!verified) next(new BadRequestError("Invalid Code"));
+
+      await accountModel.updateOne({_id: res.locals.user.id}, {$set: {two_factor: true}});
+
+      res.status(200).json({message: "two factor now enabled"});
+
+    } catch (err) {
+
+      console.log(err);
 
       next(new ServerError());
 

@@ -165,6 +165,7 @@ export default () => {
       // @ts-ignore
       const d = await scService.search(req.query.q);
 
+      // TODO will need to transform data to proper key names for frontend digest
       res.status(200).json(d);
 
     } catch (err) {
@@ -219,7 +220,8 @@ export default () => {
 
   });
 
-  /*api.put("/sc/:id/song/:cid", async (req:express.Request, res:express.Response, next:express.NextFunction) => {
+  /*// add soundcloud song to playlist using content id - PUT "/_/playlists/sc/:id/song/:cid"
+  api.put("/sc/:id/song/:cid", async (req:express.Request, res:express.Response, next:express.NextFunction) => {
 
     try {
 

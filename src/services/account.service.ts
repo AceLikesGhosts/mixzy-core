@@ -8,6 +8,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import crypto from "crypto";
 import config from "config";
 import _ from "lodash";
+import speakeasy from "speakeasy";
 
 class AccountService {
 
@@ -68,7 +69,7 @@ class AccountService {
   }).single("avatar");
 
   // change username service method
-  async changeUsername (redis: Redis, username:string, password:string, user: IAccount): Promise<{error?: string, username?:string}> {
+  async changeUsername (redis: Redis, username:string, password:string, code: string, user: IAccount): Promise<{error?: string, username?:string}> {
 
     try {
 
@@ -84,16 +85,48 @@ class AccountService {
 
       } else {
 
-        if (await argon2.verify(user.hash, password) !== true) return {error: "invalid password"};
+        if (user.two_factor === true && !code) {
 
-        await accountModel.updateOne({_id: user.id}, {username: username});
+          return {error: "two_factor_enabled"};
 
-        let dt = new Date();
-        dt.setSeconds(dt.getSeconds() + (60*60*24*30));
+        } else if (user.two_factor === true && code) {
 
-        await redis.set(`${user.id}:username:timeout`, "true", "EX", (60*60*24*30));
+          const verified = speakeasy.totp.verify({
+            secret: user.two_factor_secret,
+            encoding: "base32",
+            token: code,
+            window: 6
+          });
 
-        return {username: username};
+          if (!verified) return {error: "invalid code"};
+
+          await accountModel.updateOne({_id: user.id}, {username: username});
+
+          let dt = new Date();
+          dt.setSeconds(dt.getSeconds() + (60*60*24*30));
+
+          await redis.set(`${user.id}:username:timeout`, "true", "EX", (60*60*24*30));
+
+          return {username: username};
+
+        } else if (user.two_factor === false && !password) {
+
+          return {error: "invalid password"};
+
+        } else {
+
+          if (await argon2.verify(user.hash, password) !== true) return {error: "invalid password"};
+
+          await accountModel.updateOne({_id: user.id}, {username: username});
+
+          let dt = new Date();
+          dt.setSeconds(dt.getSeconds() + (60*60*24*30));
+
+          await redis.set(`${user.id}:username:timeout`, "true", "EX", (60*60*24*30));
+
+          return {username: username};
+
+        }
 
       }
 
@@ -104,21 +137,50 @@ class AccountService {
   }
 
   // change password service method
-  async changePassword (current_password: string, new_password: string, user: IAccount): Promise<{error?: string, tokens?: {access_token: string, refresh_token: string, expires: number}}> {
+  async changePassword (current_password: string, new_password: string, code: string, user: IAccount): Promise<{error?: string, tokens?: {access_token: string, refresh_token: string, expires: number}}> {
 
     try {
 
-      if (await argon2.verify(user.hash, current_password) !== true) return {error: "Invlid password"};
+      if (await argon2.verify(user.hash, current_password) !== true) return {error: "Invalid password"};
 
-      const hash = await argon2.hash(new_password, {saltLength: 70, type: argon2.argon2id});
+      if (user.two_factor === true && !code) {
 
-      await accountModel.updateOne({_id: user.id}, {hash});
+        return {error: "two_factor_enabled"};
 
-      await authService.revokeUserTokens(user.id);
+      } else if (user.two_factor === true && code) {
 
-      const tokens = await authService.genTokens(user.id);
+        const verified = speakeasy.totp.verify({
+          secret: user.two_factor_secret,
+          encoding: "base32",
+          token: code,
+          window: 6
+        });
 
-      return {tokens: tokens};
+        if (!verified) return {error: "invalid 2fa code"};
+
+        const hash = await argon2.hash(new_password, {saltLength: 70, type: argon2.argon2id});
+
+        await accountModel.updateOne({_id: user.id}, {hash});
+
+        await authService.revokeUserTokens(user.id);
+
+        const tokens = await authService.genTokens(user.id);
+
+        return {tokens: tokens};
+
+      } else {
+
+        const hash = await argon2.hash(new_password, {saltLength: 70, type: argon2.argon2id});
+
+        await accountModel.updateOne({_id: user.id}, {hash});
+
+        await authService.revokeUserTokens(user.id);
+
+        const tokens = await authService.genTokens(user.id);
+
+        return {tokens: tokens};
+
+      }
 
     } catch (err) {
       throw err;
